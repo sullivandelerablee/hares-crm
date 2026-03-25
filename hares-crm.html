@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HARES Courtage — CRM</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+:root{
+  --bg:#07090f;--surface:#0d1117;--surface2:#131b27;--surface3:#1a2335;
+  --border:#1e2d44;--border2:#243346;
+  --accent:#1d6af5;--accent2:#0ea5e9;--gold:#f0a500;
+  --green:#0dbc74;--red:#f04438;--orange:#f97316;--purple:#7c3aed;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+  --font-h:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;
+  --r:12px;--r2:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{font-size:14px;}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* ══════════════════════ LOGIN ══════════════════════ */
+#login-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 80% 60% at 20% 30%,#0c1e3a,transparent),
+             radial-gradient(ellipse 60% 80% at 80% 70%,#0a1628,transparent),var(--bg);
+  position:relative;overflow:hidden;
+}
+#login-screen::before{
+  content:'';position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(29,106,245,.06) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+.lcard{
+  background:rgba(13,17,23,.92);border:1px solid var(--border2);border-radius:20px;
+  padding:44px 48px;width:420px;max-width:94vw;position:relative;
+  backdrop-filter:blur(24px);box-shadow:0 32px 64px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04);
+}
+.lcard::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;border-radius:20px 20px 0 0;
+  background:linear-gradient(90deg,transparent,rgba(29,106,245,.6),rgba(14,165,233,.5),transparent);
+}
+.l-logo{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+.l-logo-mark{
+  width:44px;height:44px;border-radius:10px;
+  background:linear-gradient(135deg,#1d6af5,#0ea5e9);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-h);font-weight:800;font-size:1.1rem;color:#fff;
+  box-shadow:0 8px 20px rgba(29,106,245,.4);
+}
+.l-logo-text{font-family:var(--font-h);font-weight:800;font-size:1.6rem;letter-spacing:1px;}
+.l-sub{color:var(--text3);font-size:.8rem;margin-bottom:32px;letter-spacing:.4px;}
+.l-label{font-size:.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;display:block;}
+.l-input{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;
+  padding:12px 14px;color:var(--text);font-family:var(--font-b);font-size:.9rem;margin-bottom:16px;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.l-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(29,106,245,.15);}
+.l-btn{
+  width:100%;background:linear-gradient(135deg,#1d6af5,#0ea5e9);border:none;border-radius:9px;
+  padding:13px;color:#fff;font-family:var(--font-h);font-size:.95rem;font-weight:700;
+  cursor:pointer;transition:opacity .2s,transform .1s;letter-spacing:.5px;
+  box-shadow:0 8px 24px rgba(29,106,245,.35);
+}
+.l-btn:hover{opacity:.88;}
+.l-btn:active{transform:scale(.98);}
+.l-error{color:var(--red);font-size:.78rem;margin-top:10px;display:none;padding:8px 12px;background:rgba(240,68,56,.08);border-radius:7px;border:1px solid rgba(240,68,56,.2);}
+.l-quick{margin-top:24px;padding-top:22px;border-top:1px solid var(--border);}
+.l-quick p{color:var(--text3);font-size:.7rem;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+.q-chip{
+  display:inline-block;background:var(--surface2);border:1px solid var(--border);
+  border-radius:20px;padding:5px 13px;font-size:.75rem;color:var(--text2);cursor:pointer;
+  margin:3px 3px 3px 0;transition:all .15s;
+}
+.q-chip:hover{border-color:var(--accent);color:var(--text);}
+
+/* ══════════════════════ APP SHELL ══════════════════════ */
+#app{display:none;min-height:100vh;flex-direction:column;}
+
+/* TOP NAV */
+.topnav{
+  height:58px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;background:rgba(13,17,23,.95);
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;
+  backdrop-filter:blur(16px);
+}
+.nav-brand{display:flex;align-items:center;gap:10px;}
+.nav-mark{width:32px;height:32px;border-radius:7px;background:linear-gradient(135deg,#1d6af5,#0ea5e9);display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-weight:800;font-size:.85rem;color:#fff;}
+.nav-name{font-family:var(--font-h);font-weight:700;font-size:1.05rem;letter-spacing:.5px;}
+.nav-tabs{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:3px;}
+.ntab{
+  background:none;border:none;padding:6px 14px;border-radius:7px;
+  color:var(--text2);font-family:var(--font-b);font-size:.82rem;font-weight:500;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.ntab:hover{color:var(--text);background:rgba(255,255,255,.04);}
+.ntab.active{background:var(--surface3);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.sync-pill{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse-dot 2s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(13,188,116,.4);}50%{opacity:.7;box-shadow:0 0 0 5px rgba(13,188,116,0);}}
+.sync-txt{font-size:.7rem;color:var(--text2);}
+.nav-user-pill{display:flex;align-items:center;gap:8px;padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;}
+.nav-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#1d6af5,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:#fff;}
+.nav-uname{font-size:.8rem;font-weight:500;}
+.badge-r{font-size:.62rem;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:20px;letter-spacing:.5px;}
+.ba{background:rgba(240,165,0,.12);color:var(--gold);}
+.bagt{background:rgba(13,188,116,.12);color:var(--green);}
+.l-out{background:none;border:1px solid var(--border);color:var(--text2);border-radius:7px;padding:5px 12px;font-size:.75rem;cursor:pointer;transition:all .15s;}
+.l-out:hover{border-color:var(--red);color:var(--red);}
+
+/* MAIN */
+.main{flex:1;padding:22px 24px;max-width:1640px;margin:0 auto;width:100%;}
+.page{display:none;animation:fadein .2s;}
+.page.active{display:block;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+/* ── CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px;}
+.kpi{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);
+  padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s,transform .15s;
+  cursor:default;
+}
+.kpi:hover{border-color:var(--border2);transform:translateY(-1px);}
+.kpi-accent{position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;opacity:.07;}
+.kpi.c-blue .kpi-accent{background:var(--accent);}
+.kpi.c-cyan .kpi-accent{background:var(--accent2);}
+.kpi.c-gold .kpi-accent{background:var(--gold);}
+.kpi.c-green .kpi-accent{background:var(--green);}
+.kpi.c-orange .kpi-accent{background:var(--orange);}
+.kpi.c-purple .kpi-accent{background:var(--purple);}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.kpi-icon{font-size:1.2rem;}
+.kpi-badge{font-size:.65rem;font-weight:600;padding:2px 8px;border-radius:20px;}
+.up{background:rgba(13,188,116,.12);color:var(--green);}
+.down{background:rgba(240,68,56,.12);color:var(--red);}
+.kpi-label{font-size:.7rem;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;}
+.kpi-value{font-family:var(--font-h);font-size:1.65rem;font-weight:700;letter-spacing:-1px;line-height:1;}
+.kpi-sub{font-size:.72rem;color:var(--text3);margin-top:5px;}
+
+/* ── SECTION HEADS ── */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sh-title{font-family:var(--font-h);font-size:1rem;font-weight:700;}
+.sh-sub{font-size:.75rem;color:var(--text2);}
+
+/* ── CHARTS ── */
+.charts-2{display:grid;grid-template-columns:1.8fr 1fr;gap:14px;margin-bottom:20px;}
+.charts-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px;}
+.chart-title{font-family:var(--font-h);font-size:.88rem;font-weight:700;margin-bottom:16px;color:var(--text);}
+canvas{max-height:200px;}
+
+/* ── PERIOD SELECTOR ── */
+.period-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;align-items:center;}
+.period-btn{
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:7px 14px;color:var(--text2);font-size:.78rem;cursor:pointer;transition:all .15s;
+}
+.period-btn:hover{border-color:var(--accent);color:var(--text);}
+.period-btn.active{background:rgba(29,106,245,.15);border-color:var(--accent);color:var(--accent);}
+.period-sep{color:var(--text3);font-size:.8rem;}
+.pi{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-size:.78rem;outline:none;transition:border-color .2s;}
+.pi:focus{border-color:var(--accent);}
+
+/* ── FILTERS ── */
+.filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px 18px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:16px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fl{font-size:.67rem;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;font-weight:600;}
+.fi,.fs{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-family:var(--font-b);font-size:.8rem;min-width:130px;outline:none;transition:border-color .2s;}
+.fi:focus,.fs:focus{border-color:var(--accent);}
+.fs option{background:var(--surface2);}
+.btn-go{background:linear-gradient(135deg,#1d6af5,#0ea5e9);border:none;border-radius:8px;padding:8px 18px;color:#fff;font-size:.8rem;font-weight:600;cursor:pointer;transition:opacity .2s;}
+.btn-go:hover{opacity:.85;}
+.btn-rst{background:none;border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text2);font-size:.8rem;cursor:pointer;transition:all .15s;}
+.btn-rst:hover{border-color:var(--red);color:var(--red);}
+
+/* ── TABLE ── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;}
+.table-bar{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;}
+.tsearch{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:.8rem;width:220px;outline:none;transition:border-color .2s;}
+.tsearch:focus{border-color:var(--accent);}
+.btn-add{background:linear-gradient(135deg,#1d6af5,#0ea5e9);border:none;border-radius:8px;padding:8px 16px;color:#fff;font-size:.78rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:opacity .2s;}
+.btn-add:hover{opacity:.85;}
+table{width:100%;border-collapse:collapse;font-size:.78rem;}
+thead th{padding:10px 14px;text-align:left;font-size:.65rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;}
+thead th:hover{color:var(--text2);}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.03);transition:background .1s;}
+tbody tr:hover{background:rgba(29,106,245,.04);}
+td{padding:10px 14px;vertical-align:middle;}
+.td-bold{font-weight:600;}
+.td-mono{font-family:var(--font-h);font-weight:700;}
+.td-muted{color:var(--text2);font-size:.72rem;}
+.bdg{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:.65rem;font-weight:600;white-space:nowrap;}
+.b-april{background:rgba(29,106,245,.12);color:#60a5fa;}
+.b-2ma{background:rgba(124,58,237,.12);color:#a78bfa;}
+.b-alptis{background:rgba(14,165,233,.12);color:#38bdf8;}
+.b-neoliane{background:rgba(240,165,0,.12);color:var(--gold);}
+.b-vitalite{background:rgba(13,188,116,.12);color:var(--green);}
+.b-valide{background:rgba(13,188,116,.1);color:var(--green);}
+.b-attente{background:rgba(240,165,0,.1);color:var(--gold);}
+.b-annule{background:rgba(240,68,56,.1);color:var(--red);}
+.b-sante{background:rgba(29,106,245,.1);color:#60a5fa;}
+.b-frais{background:rgba(240,165,0,.1);color:var(--gold);}
+.b-dc{background:rgba(124,58,237,.1);color:#a78bfa;}
+.b-ijh{background:rgba(13,188,116,.1);color:var(--green);}
+.tfoot-bar{padding:12px 18px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);}
+.tinfo{font-size:.72rem;color:var(--text2);}
+.pages{display:flex;gap:3px;}
+.pgbtn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:.72rem;color:var(--text2);cursor:pointer;transition:all .15s;}
+.pgbtn:hover,.pgbtn.active{border-color:var(--accent);color:var(--accent);}
+
+/* ── LEADERBOARD ── */
+.lb-wrap{display:flex;flex-direction:column;gap:8px;}
+.lb-row{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;transition:border-color .15s;}
+.lb-row:hover{border-color:var(--border2);}
+.lb-rk{font-family:var(--font-h);font-weight:800;font-size:1rem;width:24px;text-align:center;}
+.rk1{color:var(--gold);}
+.rk2{color:#94a3b8;}
+.rk3{color:#b45309;}
+.lb-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#1d6af5,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;}
+.lb-inf{flex:1;min-width:0;}
+.lb-nm{font-weight:600;font-size:.85rem;margin-bottom:1px;}
+.lb-st{font-size:.7rem;color:var(--text2);}
+.lb-br{height:3px;background:var(--border);border-radius:2px;margin-top:5px;overflow:hidden;}
+.lb-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#1d6af5,#0ea5e9);}
+.lb-amt{font-family:var(--font-h);font-weight:700;font-size:.9rem;color:var(--accent2);white-space:nowrap;}
+
+/* ── AGENTS PAGE ── */
+.ag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
+.ag-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px;text-align:center;transition:border-color .2s,transform .15s;}
+.ag-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.ag-av{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#1d6af5,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;margin:0 auto 12px;}
+.ag-nm{font-family:var(--font-h);font-weight:700;font-size:.95rem;margin-bottom:3px;}
+.ag-rl{color:var(--text3);font-size:.72rem;margin-bottom:14px;}
+.ag-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left;}
+.ags{background:var(--surface2);border-radius:8px;padding:9px 10px;}
+.ags-l{font-size:.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+.ags-v{font-family:var(--font-h);font-weight:700;font-size:.88rem;}
+
+/* ── RECAP PAGE ── */
+.recap-monthly th{text-align:right;}
+.recap-monthly th:first-child{text-align:left;}
+.recap-monthly td{text-align:right;}
+.recap-monthly td:first-child{text-align:left;font-weight:600;}
+.prog-cell{min-width:120px;}
+.prog-bar{height:4px;background:var(--border);border-radius:2px;margin-top:4px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:2px;transition:width .5s;}
+
+/* ── MODAL ── */
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:500;display:none;align-items:center;justify-content:center;}
+.moverlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:32px 36px;width:580px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 40px 80px rgba(0,0,0,.5);}
+.modal::before{content:'';display:block;height:1px;margin:-32px -36px 30px;background:linear-gradient(90deg,transparent,rgba(29,106,245,.5),rgba(14,165,233,.4),transparent);border-radius:20px 20px 0 0;}
+.modal-title{font-family:var(--font-h);font-size:1.1rem;font-weight:700;margin-bottom:22px;}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fg2 .fgf{grid-column:span 2;}
+.mlabel{font-size:.67rem;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:6px;display:block;}
+.minput,.mselect{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--font-b);font-size:.85rem;outline:none;transition:border-color .2s;}
+.minput:focus,.mselect:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(29,106,245,.12);}
+.mselect option{background:var(--surface2);}
+.mactions{display:flex;gap:8px;justify-content:flex-end;margin-top:22px;}
+.m-cancel{background:none;border:1px solid var(--border);border-radius:8px;padding:9px 20px;color:var(--text2);font-size:.83rem;cursor:pointer;transition:all .15s;}
+.m-cancel:hover{border-color:var(--red);color:var(--red);}
+.m-save{background:linear-gradient(135deg,#1d6af5,#0ea5e9);border:none;border-radius:8px;padding:9px 22px;color:#fff;font-size:.83rem;font-weight:600;cursor:pointer;transition:opacity .2s;}
+.m-save:hover{opacity:.85;}
+
+/* ── TOTALS ROW ── */
+.tot-row td{font-family:var(--font-h);font-weight:700;background:var(--surface2);font-size:.82rem;border-top:2px solid var(--border2)!important;}
+
+/* RESPONSIVE */
+@media(max-width:900px){.charts-2,.charts-3{grid-template-columns:1fr;}.nav-tabs{display:none;}.fg2{grid-template-columns:1fr;}.fg2 .fgf{grid-column:span 1;}}
+</style>
+</head>
+<body>
+
+<!-- ═══════ LOGIN ═══════ -->
+<div id="login-screen">
+<div class="lcard">
+  <div class="l-logo">
+    <div class="l-logo-mark">H</div>
+    <div class="l-logo-text">HARES</div>
+  </div>
+  <div class="l-sub">Courtage · CRM Production Casablanca</div>
+  <label class="l-label">Identifiant</label>
+  <input class="l-input" id="lu" type="text" placeholder="username" autocomplete="off">
+  <label class="l-label">Mot de passe</label>
+  <input class="l-input" id="lp" type="password" placeholder="••••••••">
+  <button class="l-btn" onclick="doLogin()">Connexion →</button>
+  <div class="l-error" id="lerr">❌ Identifiant ou mot de passe incorrect</div>
+  <div class="l-quick">
+    <p>Accès rapide — démo</p>
+    <span class="q-chip" onclick="ql('admin','admin123')">👑 Direction</span>
+    <span class="q-chip" onclick="ql('bilal','bilal123')">Bilal</span>
+    <span class="q-chip" onclick="ql('rhita','rhita123')">Rhita</span>
+    <span class="q-chip" onclick="ql('vincent','vincent123')">Vincent</span>
+    <span class="q-chip" onclick="ql('anass','anass123')">Anass</span>
+    <span class="q-chip" onclick="ql('yoan','yoan123')">Yoan</span>
+    <span class="q-chip" onclick="ql('soufiane','soufiane123')">Soufiane</span>
+    <span class="q-chip" onclick="ql('sabah','sabah123')">Sabah</span>
+    <span class="q-chip" onclick="ql('aminata','aminata123')">Aminata</span>
+    <span class="q-chip" onclick="ql('meroune','meroune123')">Meroune</span>
+    <span class="q-chip" onclick="ql('karim','karim123')">Karim</span>
+  </div>
+</div>
+</div>
+
+<!-- ═══════ APP ═══════ -->
+<div id="app">
+<nav class="topnav">
+  <div class="nav-brand">
+    <div class="nav-mark">H</div>
+    <span class="nav-name">HARES Courtage</span>
+  </div>
+  <div class="nav-tabs" id="nav-tabs">
+    <button class="ntab active" onclick="showPage('dashboard',this)">📊 Dashboard</button>
+    <button class="ntab" onclick="showPage('ventes',this)">💼 Ventes</button>
+    <button class="ntab" id="ntab-agents" onclick="showPage('agents',this)">👥 Agents</button>
+    <button class="ntab" id="ntab-recap" onclick="showPage('recap',this)">📈 Récap Annuel</button>
+  </div>
+  <div class="nav-right">
+    <div class="sync-pill"><div class="sync-dot"></div><span class="sync-txt" id="stxt">En ligne</span></div>
+    <div class="nav-user-pill">
+      <div class="nav-av" id="nav-av"></div>
+      <span class="nav-uname" id="nav-nm"></span>
+      <span class="badge-r" id="nav-rl"></span>
+    </div>
+    <button class="l-out" onclick="doLogout()">Quitter</button>
+  </div>
+</nav>
+
+<div class="main">
+
+<!-- ══════ DASHBOARD ══════ -->
+<div class="page active" id="page-dashboard">
+  <!-- Period selector -->
+  <div class="period-bar" style="margin-bottom:16px;">
+    <span style="font-size:.75rem;color:var(--text2);font-weight:600;">Période :</span>
+    <button class="period-btn" onclick="setPeriod('today',this)">Aujourd'hui</button>
+    <button class="period-btn" onclick="setPeriod('week',this)">Cette semaine</button>
+    <button class="period-btn active" onclick="setPeriod('month',this)">Ce mois</button>
+    <button class="period-btn" onclick="setPeriod('year',this)">Cette année</button>
+    <span class="period-sep">|</span>
+    <input type="date" class="pi" id="p-from" onchange="setPeriod('custom',null)">
+    <span style="color:var(--text3);font-size:.75rem;">→</span>
+    <input type="date" class="pi" id="p-to" onchange="setPeriod('custom',null)">
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpi-grid"></div>
+
+  <!-- Charts row 1 -->
+  <div class="charts-2">
+    <div class="chart-card">
+      <div class="chart-title">📊 CA Mensuel 2026 — Primes encaissées</div>
+      <canvas id="cCA"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🏢 Répartition par Compagnie</div>
+      <canvas id="cComp"></canvas>
+    </div>
+  </div>
+
+  <!-- Charts row 2 -->
+  <div class="charts-2">
+    <div class="chart-card">
+      <div class="chart-title">🏆 Classement Agents — Prime Annuelle (€)</div>
+      <canvas id="cAgents"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📋 Statut des Ventes</div>
+      <canvas id="cStatut"></canvas>
+    </div>
+  </div>
+
+  <!-- Leaderboard detail -->
+  <div class="chart-card" style="margin-bottom:20px;" id="lb-section">
+    <div class="sh">
+      <div class="chart-title" style="margin-bottom:0;">🥇 Classement Complet des Agents</div>
+      <div class="sh-sub" id="lb-period-label"></div>
+    </div>
+    <div class="lb-wrap" id="lb-list"></div>
+  </div>
+</div>
+
+<!-- ══════ VENTES ══════ -->
+<div class="page" id="page-ventes">
+  <div class="filter-bar">
+    <div class="fg"><span class="fl">Du</span><input type="date" class="fi" id="vf-from"></div>
+    <div class="fg"><span class="fl">Au</span><input type="date" class="fi" id="vf-to"></div>
+    <div class="fg" id="vf-ag-grp"><span class="fl">Agent</span>
+      <select class="fs" id="vf-agent"><option value="">Tous</option></select>
+    </div>
+    <div class="fg"><span class="fl">Compagnie</span>
+      <select class="fs" id="vf-comp">
+        <option value="">Toutes</option>
+        <option>April</option><option>2MA</option><option>Alptis</option>
+        <option>Neoliane</option><option>Vitalité</option>
+      </select>
+    </div>
+    <div class="fg"><span class="fl">Produit</span>
+      <select class="fs" id="vf-prod">
+        <option value="">Tous</option>
+        <option>Santé</option><option>Frais</option><option>DC</option><option>IJH</option>
+      </select>
+    </div>
+    <div class="fg"><span class="fl">Statut</span>
+      <select class="fs" id="vf-stat">
+        <option value="">Tous</option><option>Validé</option>
+        <option>En attente</option><option>Annulé</option>
+      </select>
+    </div>
+    <div class="fg"><span class="fl">Mois enreg.</span>
+      <select class="fs" id="vf-mois">
+        <option value="">Tous</option>
+        <option>Janvier</option><option>Fevrier</option><option>Mars</option>
+      </select>
+    </div>
+    <button class="btn-go" onclick="applyVF()">🔍 Filtrer</button>
+    <button class="btn-rst" onclick="resetVF()">✕</button>
+  </div>
+
+  <!-- Résumé filtré -->
+  <div class="kpi-grid" id="ventes-kpis" style="margin-bottom:16px;grid-template-columns:repeat(4,1fr);"></div>
+
+  <div class="table-wrap">
+    <div class="table-bar">
+      <input type="text" class="tsearch" placeholder="🔎 Rechercher client, agent..." id="vsearch" oninput="vSearch(this.value)">
+      <button class="btn-add" onclick="openModal()">＋ Nouvelle Vente</button>
+    </div>
+    <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortV('horodateur')">DATE ↕</th>
+          <th onclick="sortV('pseudo')">AGENT ↕</th>
+          <th onclick="sortV('nom')">CLIENT ↕</th>
+          <th onclick="sortV('compagnie')">COMPAGNIE ↕</th>
+          <th>PRODUIT</th>
+          <th onclick="sortV('prime')">PRIME (€) ↕</th>
+          <th onclick="sortV('frais')">FRAIS (€) ↕</th>
+          <th onclick="sortV('statut')">STATUT ↕</th>
+          <th onclick="sortV('mois')">MOIS</th>
+          <th>DATE EFFET</th>
+        </tr>
+      </thead>
+      <tbody id="vtbody"></tbody>
+    </table>
+    </div>
+    <div class="tfoot-bar">
+      <span class="tinfo" id="vtinfo"></span>
+      <div class="pages" id="vpages"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ AGENTS ══════ -->
+<div class="page" id="page-agents">
+  <div class="sh"><div class="sh-title">👥 Équipe — Performance Individuelle</div></div>
+  <div class="ag-grid" id="ag-grid"></div>
+</div>
+
+<!-- ══════ RÉCAP ══════ -->
+<div class="page" id="page-recap">
+  <div class="filter-bar">
+    <div class="fg"><span class="fl">Année</span>
+      <select class="fs" id="r-year"><option>2026</option><option>2025</option></select>
+    </div>
+    <div class="fg" id="r-ag-grp"><span class="fl">Agent</span>
+      <select class="fs" id="r-agent"><option value="">Toute l'équipe</option></select>
+    </div>
+    <button class="btn-go" onclick="buildRecap()">📈 Générer</button>
+  </div>
+
+  <div class="kpi-grid" id="recap-kpis" style="margin-bottom:20px;"></div>
+
+  <div class="charts-2" style="margin-bottom:20px;">
+    <div class="chart-card"><div class="chart-title">📅 Évolution Mensuelle</div><canvas id="rChartCA"></canvas></div>
+    <div class="chart-card"><div class="chart-title">🏢 CA par Compagnie</div><canvas id="rChartComp"></canvas></div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-bar"><div class="sh-title" style="font-size:.88rem;">Tableau Mensuel Détaillé</div></div>
+    <div style="overflow-x:auto;">
+    <table class="recap-monthly">
+      <thead>
+        <tr>
+          <th style="text-align:left">MOIS</th>
+          <th>CONTRATS</th><th>PRIME (€)</th><th>FRAIS (€)</th>
+          <th>CA TOTAL</th><th>ANNULÉ (€)</th><th>EN ATTENTE</th>
+          <th style="text-align:left;min-width:160px">VALIDÉ %</th>
+        </tr>
+      </thead>
+      <tbody id="rtbody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ═══════ MODAL ═══════ -->
+<div class="moverlay" id="moverlay">
+<div class="modal">
+  <div class="modal-title">➕ Enregistrer une Vente</div>
+  <div class="fg2">
+    <div><label class="mlabel">Horodateur</label><input type="datetime-local" class="minput" id="m-date"></div>
+    <div id="m-ag-grp"><label class="mlabel">Agent (Pseudo)</label><select class="mselect" id="m-agent"></select></div>
+    <div class="fgf"><label class="mlabel">Nom Client</label><input type="text" class="minput" id="m-client" placeholder="NOM Prénom"></div>
+    <div><label class="mlabel">Compagnie</label>
+      <select class="mselect" id="m-comp">
+        <option>April</option><option>2MA</option><option>Alptis</option>
+        <option>Neoliane</option><option>Vitalité</option>
+      </select>
+    </div>
+    <div><label class="mlabel">Produit</label>
+      <select class="mselect" id="m-prod">
+        <option>Santé</option><option>Frais</option><option>DC</option><option>IJH</option>
+      </select>
+    </div>
+    <div><label class="mlabel">Prime Annuelle (€)</label><input type="number" class="minput" id="m-prime" placeholder="0"></div>
+    <div><label class="mlabel">Frais Dossier (€)</label><input type="number" class="minput" id="m-frais" placeholder="0"></div>
+    <div><label class="mlabel">Statut</label>
+      <select class="mselect" id="m-stat">
+        <option>Validé</option><option>En attente</option><option>Annulé</option>
+      </select>
+    </div>
+    <div><label class="mlabel">Date d'effet</label><input type="month" class="minput" id="m-effet"></div>
+    <div><label class="mlabel">Mois enregistrement</label>
+      <select class="mselect" id="m-mois">
+        <option>Janvier</option><option>Fevrier</option><option>Mars</option>
+        <option>Avril</option><option>Mai</option><option>Juin</option>
+      </select>
+    </div>
+    <div><label class="mlabel">Type paiement</label>
+      <select class="mselect" id="m-paiement">
+        <option>Ifra</option><option>Echeance principale</option><option>Pas de mutuelle</option>
+      </select>
+    </div>
+    <div><label class="mlabel">Équipe</label><input type="text" class="minput" id="m-equipe" placeholder="ex: Bilal"></div>
+  </div>
+  <div class="mactions">
+    <button class="m-cancel" onclick="closeModal()">Annuler</button>
+    <button class="m-save" onclick="saveVente()">💾 Enregistrer</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  AUTHENTIFICATION
+// ════════════════════════════════════════════════════════
+const USERS = {
+  admin:    {pass:'admin123',   role:'admin',  name:'Direction',      initials:'DIR'},
+  bilal:    {pass:'bilal123',   role:'agent',  name:'Bilal',          initials:'BI'},
+  rhita:    {pass:'rhita123',   role:'agent',  name:'Rhita',          initials:'RH'},
+  vincent:  {pass:'vincent123', role:'agent',  name:'Vincent',        initials:'VI'},
+  anass:    {pass:'anass123',   role:'agent',  name:'Anass',          initials:'AN'},
+  yoan:     {pass:'yoan123',    role:'agent',  name:'Yoan',           initials:'YO'},
+  soufiane: {pass:'soufiane123',role:'agent',  name:'Soufiane',       initials:'SO'},
+  sabah:    {pass:'sabah123',   role:'agent',  name:'Sabah',          initials:'SA'},
+  aminata:  {pass:'aminata123', role:'agent',  name:'Aminata',        initials:'AM'},
+  meroune:  {pass:'meroune123', role:'agent',  name:'Meroune',        initials:'ME'},
+  karim:    {pass:'karim123',   role:'agent',  name:'Karim',          initials:'KA'},
+};
+const AGENT_NAMES = ['Bilal','Rhita','Vincent','Anass','Yoan','Soufiane','Sabah','Aminata','Meroune','Karim'];
+
+let CU = null; // current user
+
+// ════════════════════════════════════════════════════════
+//  DONNÉES RÉELLES EXTRAITES DES PDFs
+//  Source: CRM_Assurance_HARES_Ventes.pdf
+//  Vérifiées contre le tableau croisé dynamique suivi annuel
+// ════════════════════════════════════════════════════════
+const RAW_VENTES = [
+// JANVIER ─────────────────────────────────────────────
+{h:'2026-01-28',pseudo:'Bilal',   nom:'NYS MARIE HELENE',       compagnie:'April',   produit:'Santé',prime:1220,frais:0,  statut:'Validé',   mois:'Janvier',effet:'Mars'},
+{h:'2026-01-28',pseudo:'Rhita',   nom:'FREMAUX JEAN CLAUDE',    compagnie:'April',   produit:'Santé',prime:850, frais:0,  statut:'Validé',   mois:'Janvier',effet:'Mars'},
+{h:'2026-01-28',pseudo:'Rhita',   nom:'FRANCK STEEVEN',         compagnie:'April',   produit:'Santé',prime:770, frais:0,  statut:'Validé',   mois:'Janvier',effet:'Mars'},
+{h:'2026-01-28',pseudo:'Rhita',   nom:'AMIARD DANIEL',          compagnie:'April',   produit:'Santé',prime:780, frais:0,  statut:'En attente',mois:'Janvier',effet:'Mai'},
+{h:'2026-01-28',pseudo:'Rhita',   nom:'LUSSAT JEAN-CLAUDE',     compagnie:'April',   produit:'Santé',prime:1550,frais:0,  statut:'Annulé',   mois:'Janvier',effet:'Mars'},
+{h:'2026-01-28',pseudo:'Vincent', nom:'CARETTE MARIE CHRISTINE',compagnie:'April',   produit:'Santé',prime:1800,frais:0,  statut:'En attente',mois:'Janvier',effet:'Septembre'},
+{h:'2026-01-28',pseudo:'Meroune', nom:'FRAZZI SONIA',           compagnie:'April',   produit:'Santé',prime:2158,frais:0,  statut:'En attente',mois:'Janvier',effet:'Mars'},
+{h:'2026-01-28',pseudo:'Meroune', nom:'RICOU JEAN CLAUDE',      compagnie:'April',   produit:'Santé',prime:1143,frais:0,  statut:'En attente',mois:'Janvier',effet:'Mars'},
+{h:'2026-01-28',pseudo:'Yoan',    nom:'SCHITTKO SYLVIE',        compagnie:'April',   produit:'Santé',prime:1418,frais:0,  statut:'En attente',mois:'Janvier',effet:'Janvier'},
+{h:'2026-01-28',pseudo:'Meroune', nom:'ROUSSEAU PIERRE',        compagnie:'2MA',     produit:'Santé',prime:1749,frais:0,  statut:'Annulé',   mois:'Janvier',effet:'Fevrier'},
+{h:'2026-01-28',pseudo:'Soufiane',nom:'KHAL BRUNO',             compagnie:'April',   produit:'Santé',prime:878, frais:0,  statut:'En attente',mois:'Janvier',effet:'Fevrier'},
+{h:'2026-01-28',pseudo:'Soufiane',nom:'CHAILLOT CARINE',        compagnie:'April',   produit:'Santé',prime:1434,frais:0,  statut:'En attente',mois:'Janvier',effet:'Mars'},
+{h:'2026-01-28',pseudo:'Yoan',    nom:'BRUNET FABIENNE',        compagnie:'April',   produit:'Santé',prime:975, frais:0,  statut:'En attente',mois:'Janvier',effet:'Mars'},
+{h:'2026-01-28',pseudo:'Vincent', nom:'ADAMKOVIC PETER',        compagnie:'April',   produit:'Santé',prime:2261,frais:0,  statut:'En attente',mois:'Janvier',effet:'Fevrier'},
+{h:'2026-01-29',pseudo:'Bilal',   nom:'GOURGUET CATHERINE',     compagnie:'April',   produit:'Santé',prime:840, frais:0,  statut:'En attente',mois:'Janvier',effet:'Mars'},
+{h:'2026-01-29',pseudo:'Rhita',   nom:'MAZZOLENI JEAN PIERRE',  compagnie:'2MA',     produit:'Santé',prime:1070,frais:0,  statut:'En attente',mois:'Janvier',effet:'Juillet'},
+{h:'2026-01-29',pseudo:'Bilal',   nom:'GARCIA PATRICIA',        compagnie:'April',   produit:'Santé',prime:900, frais:0,  statut:'En attente',mois:'Janvier',effet:'Decembre'},
+{h:'2026-01-29',pseudo:'Soufiane',nom:'ROUBAUD SYLVIANE',       compagnie:'April',   produit:'Santé',prime:2010,frais:0,  statut:'Annulé',   mois:'Janvier',effet:'Mars'},
+{h:'2026-01-29',pseudo:'Soufiane',nom:'BARTHIER JEAN PAUL',     compagnie:'April',   produit:'Santé',prime:934, frais:0,  statut:'En attente',mois:'Janvier',effet:'Mars'},
+{h:'2026-01-29',pseudo:'Yoan',    nom:'MAES JACKY',             compagnie:'2MA',     produit:'Santé',prime:1290,frais:0,  statut:'En attente',mois:'Janvier',effet:'Janvier'},
+{h:'2026-01-29',pseudo:'Yoan',    nom:'MAES JACKY (Frais)',      compagnie:'2MA',     produit:'Frais',prime:400, frais:0,  statut:'En attente',mois:'Janvier',effet:'Janvier'},
+{h:'2026-01-30',pseudo:'Bilal',   nom:'WONGKOEFFT SERGE',       compagnie:'April',   produit:'Santé',prime:890, frais:0,  statut:'Annulé',   mois:'Janvier',effet:'Decembre'},
+{h:'2026-01-30',pseudo:'Meroune', nom:'AFELLA LAHOUCINE',       compagnie:'2MA',     produit:'Santé',prime:946, frais:0,  statut:'En attente',mois:'Janvier',effet:'Mars'},
+// FEVRIER ─────────────────────────────────────────────
+{h:'2026-02-02',pseudo:'Rhita',   nom:'LOPES LOUIS',            compagnie:'April',   produit:'Frais', prime:1460,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Fevrier'},
+{h:'2026-02-02',pseudo:'Bilal',   nom:'GUENET PHILIPPE',        compagnie:'April',   produit:'Santé', prime:1010,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Octobre'},
+{h:'2026-02-02',pseudo:'Vincent', nom:'LABEGURIE BRIGITTE',     compagnie:'April',   produit:'Frais', prime:1010,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mai'},
+{h:'2026-02-02',pseudo:'Vincent', nom:'X (Frais)',               compagnie:'April',   produit:'Frais', prime:130, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mai'},
+{h:'2026-02-03',pseudo:'Bilal',   nom:'X (Frais)',               compagnie:'April',   produit:'Frais', prime:450, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Fevrier'},
+{h:'2026-02-02',pseudo:'Rhita',   nom:'ALTARE ANNICKE',         compagnie:'April',   produit:'Santé', prime:1130,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-02',pseudo:'Soufiane',nom:'PAVE PATRICK',           compagnie:'April',   produit:'Santé', prime:1580,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Juillet'},
+{h:'2026-02-03',pseudo:'Bilal',   nom:'CADET DANIEL',           compagnie:'April',   produit:'Santé', prime:910, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Fevrier'},
+{h:'2026-02-03',pseudo:'Rhita',   nom:'AMRANI RACHIDA',         compagnie:'Vitalité',produit:'Santé', prime:2750,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Fevrier'},
+{h:'2026-02-03',pseudo:'Soufiane',nom:'TECHEC HENRI',           compagnie:'April',   produit:'Santé', prime:1390,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Fevrier'},
+{h:'2026-02-03',pseudo:'Vincent', nom:'CHAPOTIN ANNIE',         compagnie:'April',   produit:'Santé', prime:1389,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Avril'},
+{h:'2026-02-04',pseudo:'Rhita',   nom:'BRANCHET MARYSE',        compagnie:'April',   produit:'Santé', prime:907, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-04',pseudo:'Bilal',   nom:'DUBOIS CHARLES HENRI',   compagnie:'April',   produit:'Santé', prime:530, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-05',pseudo:'Bilal',   nom:'MIQUELAJAUREGUI PATRICIA',compagnie:'April',  produit:'Santé', prime:995, frais:0,  statut:'Annulé',   mois:'Fevrier',effet:'Aout'},
+{h:'2026-02-05',pseudo:'Yoan',    nom:'CARPENTIER MARIE CLAUDE',compagnie:'April',   produit:'Santé', prime:1390,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Aout'},
+{h:'2026-02-06',pseudo:'Rhita',   nom:'MERCIER FREDERIC Santé', compagnie:'April',   produit:'Santé', prime:1205,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-06',pseudo:'Rhita',   nom:'MERCIER FREDERIC Hab',   compagnie:'April',   produit:'DC',    prime:390, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-06',pseudo:'Rhita',   nom:'PALA AURELIE',           compagnie:'April',   produit:'Santé', prime:1270,frais:0,  statut:'Annulé',   mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-09',pseudo:'Bilal',   nom:'GASNIER NICOLE',         compagnie:'April',   produit:'Santé', prime:1410,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-09',pseudo:'Soufiane',nom:'POTHON MARCHON Santé',   compagnie:'April',   produit:'Santé', prime:725, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Avril'},
+{h:'2026-02-09',pseudo:'Soufiane',nom:'POTHON MARCHON DC',      compagnie:'April',   produit:'DC',    prime:701, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Avril'},
+{h:'2026-02-09',pseudo:'Rhita',   nom:'ESTRADE MICHEL',         compagnie:'2MA',     produit:'Santé', prime:1265,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-10',pseudo:'Rhita',   nom:'RUSSO ANTOINE',          compagnie:'2MA',     produit:'Santé', prime:2088,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Avril'},
+{h:'2026-02-10',pseudo:'Soufiane',nom:'BRANCHET MARYSE (2)',    compagnie:'2MA',     produit:'Santé', prime:936, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Avril'},
+{h:'2026-02-10',pseudo:'Vincent', nom:'CORNU BERNARD',          compagnie:'April',   produit:'Santé', prime:1150,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-12',pseudo:'Bilal',   nom:'BETTON PATRICIA',        compagnie:'April',   produit:'Santé', prime:859, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-12',pseudo:'Vincent', nom:'SAUNIER SYLVIE',         compagnie:'April',   produit:'Santé', prime:974, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-12',pseudo:'Rhita',   nom:'MOHAMED ABDOU ALI',      compagnie:'April',   produit:'Santé', prime:649, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Fevrier'},
+{h:'2026-02-12',pseudo:'Vincent', nom:'DUGAIT MARYSE',          compagnie:'April',   produit:'Santé', prime:1862,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Juin'},
+{h:'2026-02-13',pseudo:'Vincent', nom:'TASSET DANIEL',          compagnie:'Alptis',  produit:'Santé', prime:1824,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mai'},
+{h:'2026-02-18',pseudo:'Anass',   nom:'RENARD CHRISTIAN',       compagnie:'2MA',     produit:'Santé', prime:1172,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Avril'},
+{h:'2026-02-18',pseudo:'Rhita',   nom:'MARTIN FRANCOIS',        compagnie:'2MA',     produit:'Santé', prime:1110,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Fevrier'},
+{h:'2026-02-18',pseudo:'Vincent', nom:'ENAULT CLAUDINE',        compagnie:'Vitalité',produit:'Santé', prime:2652,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Avril'},
+{h:'2026-02-19',pseudo:'Bilal',   nom:'AMIARD DANIEL (2)',      compagnie:'2MA',     produit:'Santé', prime:980, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mai'},
+{h:'2026-02-19',pseudo:'Bilal',   nom:'BERTET ANABELLE',        compagnie:'Alptis',  produit:'Santé', prime:1767,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Avril'},
+{h:'2026-02-19',pseudo:'Anass',   nom:'CUVILLIEZ CHRISTIANE',   compagnie:'Alptis',  produit:'Santé', prime:958, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-20',pseudo:'Rhita',   nom:'DAVID VIVIANE',          compagnie:'Vitalité',produit:'Santé', prime:920, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Fevrier'},
+{h:'2026-02-20',pseudo:'Yoan',    nom:'RICOU JEAN CLAUDE (2)',   compagnie:'Alptis',  produit:'Santé', prime:914, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mai'},
+{h:'2026-02-20',pseudo:'Sabah',   nom:'NOIRIEL MICHEL',         compagnie:'Alptis',  produit:'Santé', prime:464, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Juin'},
+{h:'2026-02-23',pseudo:'Vincent', nom:'ARNOULD JOCELYNE',       compagnie:'April',   produit:'Santé', prime:2085,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Fevrier'},
+{h:'2026-02-23',pseudo:'Vincent', nom:'ARNOULD JOCELYNE Frais', compagnie:'April',   produit:'Frais', prime:400, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Fevrier'},
+{h:'2026-02-24',pseudo:'Bilal',   nom:'GASNIER GASNIER',        compagnie:'2MA',     produit:'Santé', prime:1440,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Avril'},
+{h:'2026-02-24',pseudo:'Karim',   nom:'PINOTEAU GILLES',        compagnie:'2MA',     produit:'Santé', prime:988, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mai'},
+{h:'2026-02-24',pseudo:'Bilal',   nom:'SIMON CHRISTIAN',        compagnie:'2MA',     produit:'Santé', prime:704, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mai'},
+{h:'2026-02-25',pseudo:'Sabah',   nom:'CHALLOT CARINE',         compagnie:'2MA',     produit:'Santé', prime:966, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mai'},
+{h:'2026-02-25',pseudo:'Bilal',   nom:'OJARDIAS GEORGES',       compagnie:'2MA',     produit:'Santé', prime:764, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-26',pseudo:'Anass',   nom:'FARCE GISELE',           compagnie:'April',   produit:'Santé', prime:1057,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Fevrier'},
+{h:'2026-02-26',pseudo:'Anass',   nom:'RAVASSON JEANNE',        compagnie:'April',   produit:'Santé', prime:1153,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Avril'},
+{h:'2026-02-27',pseudo:'Bilal',   nom:'ALAIN GILBERT',          compagnie:'April',   produit:'Santé', prime:686, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Decembre'},
+{h:'2026-02-27',pseudo:'Bilal',   nom:'DIACONO LOUISE',         compagnie:'April',   produit:'Santé', prime:850, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Avril'},
+{h:'2026-02-27',pseudo:'Anass',   nom:'PITOU YVONNE',           compagnie:'April',   produit:'Santé', prime:1458,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Avril'},
+{h:'2026-02-27',pseudo:'Karim',   nom:'GERMAIN MARION',         compagnie:'Vitalité',produit:'Santé', prime:804, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Juillet'},
+{h:'2026-02-27',pseudo:'Rhita',   nom:'DEPIE NAHOUNOU JULES',   compagnie:'2MA',     produit:'Santé', prime:628, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Mars'},
+{h:'2026-02-27',pseudo:'Anass',   nom:'FREMAUX MARIE-FRANCE',   compagnie:'April',   produit:'Santé', prime:1418,frais:0,  statut:'En attente',mois:'Fevrier',effet:'Avril'},
+{h:'2026-02-27',pseudo:'Anass',   nom:'LAPORTE MARTINE',        compagnie:'April',   produit:'Santé', prime:982, frais:0,  statut:'En attente',mois:'Fevrier',effet:'Janvier'},
+{h:'2026-02-27',pseudo:'Sabah',   nom:'BASTIEN DANIELLE',       compagnie:'Alptis',  produit:'Santé', prime:778, frais:0,  statut:'En attente',mois:'Mars',   effet:'Mai'},
+// MARS ────────────────────────────────────────────────
+{h:'2026-03-02',pseudo:'Bilal',   nom:'MICHON GERARD',          compagnie:'2MA',     produit:'Santé', prime:1144,frais:0,  statut:'En attente',mois:'Mars',   effet:'Mai'},
+{h:'2026-03-02',pseudo:'Anass',   nom:'CUVILLIEZ CHRISTIANE (2)',compagnie:'April',   produit:'Santé', prime:913, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-02',pseudo:'Anass',   nom:'JEGO SERGINE',           compagnie:'April',   produit:'Santé', prime:1200,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-02',pseudo:'Anass',   nom:'POUZET MARTINE',         compagnie:'April',   produit:'Santé', prime:1080,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-03',pseudo:'Bilal',   nom:'TURBIDE FERNAND',        compagnie:'April',   produit:'Santé', prime:1197,frais:0,  statut:'En attente',mois:'Mars',   effet:'Juillet'},
+{h:'2026-03-03',pseudo:'Vincent', nom:'TOUYA MICHEL',           compagnie:'April',   produit:'Santé', prime:1036,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-03',pseudo:'Anass',   nom:'POTTIER LIONEL',         compagnie:'April',   produit:'Santé', prime:1397,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-03',pseudo:'Anass',   nom:'HAMMAMI JAWAHER',        compagnie:'April',   produit:'Santé', prime:798, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-04',pseudo:'Sabah',   nom:'RAGOT BRACONI THIERRY',  compagnie:'Alptis',  produit:'Santé', prime:989, frais:0,  statut:'En attente',mois:'Mars',   effet:'Mai'},
+{h:'2026-03-04',pseudo:'Aminata', nom:'TAFIAL ANGEBERT',        compagnie:'April',   produit:'Santé', prime:957, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-04',pseudo:'Aminata', nom:'ROUILLON MARIE ODILE',   compagnie:'April',   produit:'Santé', prime:742, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-04',pseudo:'Anass',   nom:'COSTES NADINE',          compagnie:'April',   produit:'Santé', prime:996, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-04',pseudo:'Anass',   nom:'BIRMINGHAM ANNICK',      compagnie:'April',   produit:'Santé', prime:884, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-04',pseudo:'Anass',   nom:'CAUDREY CLAUDINE',       compagnie:'April',   produit:'Santé', prime:1015,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-04',pseudo:'Yoan',    nom:'FACK GERALD',            compagnie:'April',   produit:'Santé', prime:904, frais:0,  statut:'En attente',mois:'Mars',   effet:'Mars'},
+{h:'2026-03-04',pseudo:'Yoan',    nom:'DESCOTES BEATRICE',      compagnie:'April',   produit:'Santé', prime:977, frais:0,  statut:'En attente',mois:'Mars',   effet:'Mars'},
+{h:'2026-03-05',pseudo:'Aminata', nom:'KANAKIS ATHENA',         compagnie:'April',   produit:'Santé', prime:552, frais:0,  statut:'En attente',mois:'Mars',   effet:'Mars'},
+{h:'2026-03-05',pseudo:'Vincent', nom:'CASAL MARIA',            compagnie:'April',   produit:'Santé', prime:770, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-05',pseudo:'Aminata', nom:'PINEAU CHRISTIAN',       compagnie:'April',   produit:'Santé', prime:949, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-05',pseudo:'Sabah',   nom:'SERRIDJ KHELIFA',        compagnie:'2MA',     produit:'Santé', prime:841, frais:0,  statut:'En attente',mois:'Mars',   effet:'Mai'},
+{h:'2026-03-05',pseudo:'Bilal',   nom:'PAGNIER MARYSE',         compagnie:'April',   produit:'Santé', prime:878, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-05',pseudo:'Yoan',    nom:'MADELEINE EVELYNE',      compagnie:'April',   produit:'Santé', prime:981, frais:0,  statut:'En attente',mois:'Mars',   effet:'Mars'},
+{h:'2026-03-05',pseudo:'Yoan',    nom:'ONGENA ANDRE',           compagnie:'April',   produit:'Santé', prime:1041,frais:0,  statut:'En attente',mois:'Mars',   effet:'Mars'},
+{h:'2026-03-06',pseudo:'Aminata', nom:'BADASSOU HARRY',         compagnie:'April',   produit:'Santé', prime:1048,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-06',pseudo:'Anass',   nom:'LANFRANCHI ROSELYNE',    compagnie:'April',   produit:'Santé', prime:1027,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-06',pseudo:'Aminata', nom:'BOUDOUD PHILIPPE',       compagnie:'April',   produit:'Santé', prime:1033,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-06',pseudo:'Anass',   nom:'LE MAT DANIELLE',        compagnie:'April',   produit:'Santé', prime:933, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-06',pseudo:'Anass',   nom:'GOURLAOUEN GISELE',      compagnie:'April',   produit:'Santé', prime:1220,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-06',pseudo:'Yoan',    nom:'MARBAIX HENRI',          compagnie:'April',   produit:'Santé', prime:1187,frais:0,  statut:'En attente',mois:'Mars',   effet:'Mars'},
+{h:'2026-03-06',pseudo:'Sabah',   nom:'IBRAHIM SITINA',         compagnie:'2MA',     produit:'Santé', prime:1073,frais:0,  statut:'En attente',mois:'Mars',   effet:'Mars'},
+{h:'2026-03-09',pseudo:'Aminata', nom:'GAY MARIE ANGE',         compagnie:'April',   produit:'Santé', prime:931, frais:0,  statut:'En attente',mois:'Mars',   effet:'Mars'},
+{h:'2026-03-09',pseudo:'Aminata', nom:'WITZEL FREDERIC',        compagnie:'April',   produit:'Santé', prime:1060,frais:0,  statut:'En attente',mois:'Mars',   effet:'Mars'},
+{h:'2026-03-09',pseudo:'Sabah',   nom:'LE GUENNEC MARYVONNE',   compagnie:'April',   produit:'Santé', prime:1467,frais:0,  statut:'En attente',mois:'Mars',   effet:'Juin'},
+{h:'2026-03-10',pseudo:'Aminata', nom:'BRICOUT BERTRAND',       compagnie:'April',   produit:'Santé', prime:1197,frais:0,  statut:'En attente',mois:'Mars',   effet:'Mai'},
+{h:'2026-03-10',pseudo:'Aminata', nom:'MERY CHRISTOPHE',        compagnie:'April',   produit:'Santé', prime:1257,frais:0,  statut:'En attente',mois:'Mars',   effet:'Mai'},
+{h:'2026-03-10',pseudo:'Anass',   nom:'CHAIGNET CLAUDIE',       compagnie:'April',   produit:'Santé', prime:1098,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-10',pseudo:'Vincent', nom:'COUTABLE DANIELLE',      compagnie:'April',   produit:'Santé', prime:1835,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-10',pseudo:'Sabah',   nom:'CHALLOT CARINE (2)',     compagnie:'April',   produit:'Santé', prime:1030,frais:0,  statut:'En attente',mois:'Mars',   effet:'Octobre'},
+{h:'2026-03-10',pseudo:'Anass',   nom:'DEVOS THERESE',          compagnie:'April',   produit:'Santé', prime:1239,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-10',pseudo:'Bilal',   nom:'BOUET CHARLIE',          compagnie:'Alptis',  produit:'Santé', prime:970, frais:0,  statut:'En attente',mois:'Mars',   effet:'Juillet'},
+{h:'2026-03-10',pseudo:'Aminata', nom:'CHABERT YVES',           compagnie:'April',   produit:'Santé', prime:1428,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-11',pseudo:'Sabah',   nom:'BASTIEN DANIELLE (2)',   compagnie:'Alptis',  produit:'Santé', prime:770, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-11',pseudo:'Aminata', nom:'BOVARD FLORENCE',        compagnie:'April',   produit:'Santé', prime:1197,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-11',pseudo:'Aminata', nom:'GUENET PHILIPPE (2)',    compagnie:'April',   produit:'Santé', prime:1013,frais:0,  statut:'En attente',mois:'Mars',   effet:'Octobre'},
+{h:'2026-03-11',pseudo:'Anass',   nom:'CUNY JEAN ALAIN',        compagnie:'April',   produit:'Santé', prime:920, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-11',pseudo:'Anass',   nom:'MASSIAS ROBERTE',        compagnie:'April',   produit:'Santé', prime:1210,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-11',pseudo:'Anass',   nom:'TIZZIAN JOSIANE',        compagnie:'April',   produit:'Santé', prime:1940,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-12',pseudo:'Aminata', nom:'TIREL GERALD',           compagnie:'April',   produit:'Santé', prime:955, frais:0,  statut:'En attente',mois:'Mars',   effet:'Aout'},
+{h:'2026-03-12',pseudo:'Aminata', nom:'CABANES CHLOE',          compagnie:'April',   produit:'Santé', prime:1191,frais:0,  statut:'En attente',mois:'Mars',   effet:'Septembre'},
+{h:'2026-03-13',pseudo:'Aminata', nom:'GASTINEAU GILLES',       compagnie:'April',   produit:'Santé', prime:787, frais:0,  statut:'En attente',mois:'Mars',   effet:'Juin'},
+{h:'2026-03-13',pseudo:'Aminata', nom:'BOUVIER MONIQUE',        compagnie:'April',   produit:'Santé', prime:1020,frais:0,  statut:'En attente',mois:'Mars',   effet:'Juin'},
+{h:'2026-03-13',pseudo:'Anass',   nom:'PERROT MARIE AGNES',     compagnie:'April',   produit:'Santé', prime:780, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-13',pseudo:'Anass',   nom:'PREVEZ MARIE ODILE',     compagnie:'April',   produit:'Santé', prime:990, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-13',pseudo:'Anass',   nom:'HAOND PATRICK',          compagnie:'April',   produit:'Santé', prime:930, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-13',pseudo:'Anass',   nom:'BAYEUX BERNARD',         compagnie:'April',   produit:'Santé', prime:1210,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-13',pseudo:'Vincent', nom:'SOKOLOVIC DEJAN',        compagnie:'April',   produit:'Santé', prime:940, frais:0,  statut:'En attente',mois:'Mars',   effet:'Mai'},
+{h:'2026-03-13',pseudo:'Aminata', nom:'PIRAS ELIGIO',           compagnie:'April',   produit:'Santé', prime:1126,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-13',pseudo:'Yoan',    nom:'VIOLET MARYSE',          compagnie:'April',   produit:'Santé', prime:1016,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-13',pseudo:'Yoan',    nom:'GUIBORAT MURYEL',        compagnie:'April',   produit:'Santé', prime:1090,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-16',pseudo:'Aminata', nom:'DJOUZA AMROUNE',         compagnie:'April',   produit:'Santé', prime:741, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-16',pseudo:'Bilal',   nom:'BENMEKHLOUF MALIKA',     compagnie:'April',   produit:'Santé', prime:1148,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-16',pseudo:'Aminata', nom:'TESSIER JEAN FRANCOIS',  compagnie:'April',   produit:'Santé', prime:1153,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-16',pseudo:'Aminata', nom:'FOUGERAIS MARIE CLOTILDE',compagnie:'April',  produit:'Santé', prime:994, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-17',pseudo:'Aminata', nom:'ANDRE WILFRIED',         compagnie:'April',   produit:'Santé', prime:1005,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-17',pseudo:'Vincent', nom:'BERTRAND DOMINIQUE',     compagnie:'April',   produit:'Santé', prime:1101,frais:0,  statut:'En attente',mois:'Mars',   effet:'Mars'},
+{h:'2026-03-17',pseudo:'Aminata', nom:'FIRINGA NICOLE',         compagnie:'April',   produit:'Santé', prime:896, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-17',pseudo:'Anass',   nom:'PIOROT GILBERT',         compagnie:'April',   produit:'Santé', prime:1520,frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-17',pseudo:'Anass',   nom:'CHRISTIANY FRANCOIS',    compagnie:'April',   produit:'Santé', prime:1020,frais:0,  statut:'En attente',mois:'Mars',   effet:'Mai'},
+{h:'2026-03-17',pseudo:'Aminata', nom:'MALANDIN DELPHINE',      compagnie:'April',   produit:'Santé', prime:682, frais:0,  statut:'En attente',mois:'Mars',   effet:'Mai'},
+{h:'2026-03-17',pseudo:'Anass',   nom:'RODOT ANNIE',            compagnie:'April',   produit:'Santé', prime:980, frais:0,  statut:'En attente',mois:'Mars',   effet:'Mai'},
+{h:'2026-03-18',pseudo:'Rhita',   nom:'MOREL SABAH',            compagnie:'April',   produit:'Santé', prime:1465,frais:50, statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-18',pseudo:'Aminata', nom:'RICHARD ARNAUD',         compagnie:'April',   produit:'Santé', prime:1011,frais:200,statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-18',pseudo:'Anass',   nom:'KIERSZ JEAN PIERRE',     compagnie:'April',   produit:'Santé', prime:1470,frais:300,statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-18',pseudo:'Anass',   nom:'MACHILLOT ANNICK',       compagnie:'April',   produit:'Santé', prime:1020,frais:200,statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-18',pseudo:'Anass',   nom:'FLAMENT GHISLAINE',      compagnie:'April',   produit:'Santé', prime:1470,frais:350,statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-18',pseudo:'Aminata', nom:'FOUGERAIS CLOTILDE IJH', compagnie:'Neoliane',produit:'IJH',   prime:229, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-18',pseudo:'Aminata', nom:'COUPAYE PATRICE',        compagnie:'April',   produit:'Santé', prime:672, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-18',pseudo:'Bilal',   nom:'ADOU CHRISTIAN PAUL',    compagnie:'Neoliane',produit:'DC',    prime:537, frais:50, statut:'En attente',mois:'Mars',   effet:'Mars'},
+{h:'2026-03-24',pseudo:'Aminata', nom:'CABANES CHLOE IJH',      compagnie:'Neoliane',produit:'IJH',   prime:417, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-24',pseudo:'Aminata', nom:'CHABERT YVES IJH',       compagnie:'Neoliane',produit:'IJH',   prime:429, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-24',pseudo:'Bilal',   nom:'SAMYN ANDREE',           compagnie:'2MA',     produit:'Santé', prime:1128,frais:30, statut:'En attente',mois:'Mars',   effet:'Mai'},
+{h:'2026-03-24',pseudo:'Aminata', nom:'MERY CHRISTOPHE IJH',    compagnie:'Neoliane',produit:'IJH',   prime:449, frais:0,  statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-24',pseudo:'Anass',   nom:'AMICO MALAMATEGNA',      compagnie:'April',   produit:'Santé', prime:1230,frais:300,statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-24',pseudo:'Anass',   nom:'MAUGE MARIE HELENE',     compagnie:'April',   produit:'Santé', prime:790, frais:300,statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-24',pseudo:'Anass',   nom:'LAVALADE CHRISTIAN',     compagnie:'April',   produit:'Santé', prime:990, frais:300,statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-25',pseudo:'Vincent', nom:'APPENZELLER BERNARD',    compagnie:'April',   produit:'Santé', prime:2265,frais:300,statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-25',pseudo:'Anass',   nom:'NATIVEL MARIE CLAUDE',   compagnie:'April',   produit:'Santé', prime:900, frais:200,statut:'En attente',mois:'Mars',   effet:'Avril'},
+{h:'2026-03-25',pseudo:'Anass',   nom:'ROSSET CLAUDETTE',       compagnie:'April',   produit:'Santé', prime:1160,frais:300,statut:'En attente',mois:'Mars',   effet:'Avril'},
+];
+
+// ════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════
+let allV = RAW_VENTES.map((v,i)=>({...v,id:i}));
+let filtV = [];
+let vPage=1; const VPAGE=20;
+let vSortCol='h'; let vSortAsc=false;
+let curPeriod={from:null,to:null};
+let charts={};
+
+// ════════════════════════════════════════════════════════
+//  LOGIN
+// ════════════════════════════════════════════════════════
+function ql(u,p){document.getElementById('lu').value=u;document.getElementById('lp').value=p;doLogin();}
+function doLogin(){
+  const u=document.getElementById('lu').value.trim().toLowerCase();
+  const p=document.getElementById('lp').value;
+  if(USERS[u]&&USERS[u].pass===p){
+    CU={username:u,...USERS[u]};
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    initApp();
+  }else{
+    document.getElementById('lerr').style.display='block';
+  }
+}
+function doLogout(){
+  CU=null;
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  document.getElementById('lp').value='';
+  document.getElementById('lerr').style.display='none';
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});
+  charts={};
+}
+
+// ════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════
+function initApp(){
+  const isAdmin=CU.role==='admin';
+  document.getElementById('nav-av').textContent=CU.initials;
+  document.getElementById('nav-nm').textContent=CU.name;
+  const rb=document.getElementById('nav-rl');
+  rb.textContent=isAdmin?'Admin':'Agent';
+  rb.className='badge-r '+(isAdmin?'ba':'bagt');
+  ['ntab-agents','ntab-recap'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display=isAdmin?'':'none';
+  });
+  // populate agent dropdowns
+  ['vf-agent','r-agent','m-agent'].forEach(id=>{
+    const s=document.getElementById(id);
+    if(!s)return;
+    while(s.options.length>(id.startsWith('m')?0:1)) s.remove(s.options.length-1);
+    if(isAdmin){AGENT_NAMES.forEach(a=>{const o=new Option(a,a);s.add(o);});}
+    else{s.add(new Option(CU.name,CU.name));}
+  });
+  // Hide agent selector in modal for agents
+  const mag=document.getElementById('m-ag-grp');
+  if(mag) mag.style.display=isAdmin?'':'none';
+  const vag=document.getElementById('vf-ag-grp');
+  if(vag) vag.style.display=isAdmin?'':'none';
+  const rag=document.getElementById('r-ag-grp');
+  if(rag) rag.style.display=isAdmin?'':'none';
+
+  // default period = ce mois (mars 2026)
+  document.getElementById('p-from').value='2026-03-01';
+  document.getElementById('p-to').value='2026-03-31';
+  setPeriod('month', document.querySelector('.period-btn.active'));
+  document.getElementById('m-date').value=new Date().toISOString().slice(0,16);
+
+  filtV=getFilteredByRole([...allV]);
+  buildDashboard();
+  renderVentes();
+  buildAgents();
+  buildRecap();
+}
+
+function getFilteredByRole(data){
+  if(CU.role==='admin') return data;
+  return data.filter(v=>v.pseudo===CU.name);
+}
+
+// ════════════════════════════════════════════════════════
+//  PERIOD
+// ════════════════════════════════════════════════════════
+function setPeriod(type, btn){
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const now = new Date('2026-03-25');
+  let from, to;
+  if(type==='today'){
+    from=to='2026-03-25';
+  } else if(type==='week'){
+    // semaine courante lun-dim
+    from='2026-03-23'; to='2026-03-25';
+  } else if(type==='month'){
+    from='2026-03-01'; to='2026-03-31';
+  } else if(type==='year'){
+    from='2026-01-01'; to='2026-12-31';
+  } else { // custom
+    from=document.getElementById('p-from').value;
+    to=document.getElementById('p-to').value;
+  }
+  if(type!=='custom'){
+    document.getElementById('p-from').value=from;
+    document.getElementById('p-to').value=to;
+  }
+  curPeriod={from,to};
+  buildDashboard();
+}
+
+function periodData(){
+  const base=getFilteredByRole(allV);
+  if(!curPeriod.from) return base;
+  return base.filter(v=>{
+    const d=v.h.slice(0,10);
+    return d>=curPeriod.from && d<=curPeriod.to;
+  });
+}
+
+// ════════════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════════════
+function buildDashboard(){
+  const pd=periodData();
+  const allBase=getFilteredByRole(allV);
+  const isAdmin=CU.role==='admin';
+
+  // KPIs
+  const caTotal = pd.reduce((s,v)=>s+v.prime,0);
+  const caValide = pd.filter(v=>v.statut==='Validé').reduce((s,v)=>s+v.prime,0);
+  const fraisTotal = pd.reduce((s,v)=>s+(v.frais||0),0);
+  const nbContrats = pd.length;
+  const nbValides = pd.filter(v=>v.statut==='Validé').length;
+  const nbAnnules = pd.filter(v=>v.statut==='Annulé').length;
+
+  // CA Annuel complet (depuis jan 2026)
+  const caAnnuel = allBase.reduce((s,v)=>s+v.prime,0);
+  const fraisAnnuel = allBase.reduce((s,v)=>s+(v.frais||0),0);
+
+  // CA Mars
+  const caMars = allBase.filter(v=>v.mois==='Mars').reduce((s,v)=>s+v.prime,0);
+  const fraisMars = allBase.filter(v=>v.mois==='Mars').reduce((s,v)=>s+(v.frais||0),0);
+
+  const kpis = [
+    {label:'CA Annuel 2026',value:fmt(caAnnuel),sub:`Primes totales Jan→Mar`,icon:'💰',cls:'c-blue'},
+    {label:'Frais Annuels',value:fmt(fraisAnnuel),sub:`Frais de dossier Jan→Mar`,icon:'🧾',cls:'c-gold'},
+    {label:`CA Période`,value:fmt(caTotal),sub:`${curPeriod.from||'...'} → ${curPeriod.to||'...'}`,icon:'📊',cls:'c-cyan'},
+    {label:'Frais Période',value:fmt(fraisTotal),sub:`Sur la période sélectionnée`,icon:'💳',cls:'c-orange'},
+    {label:'Contrats Période',value:nbContrats,sub:`dont ${nbValides} validés, ${nbAnnules} annulés`,icon:'📋',cls:'c-purple'},
+    {label:'CA Validé Période',value:fmt(caValide),sub:`Hors annulés et en attente`,icon:'✅',cls:'c-green'},
+  ];
+  if(!isAdmin){
+    kpis.splice(2,0,{label:'Mon CA Annuel',value:fmt(caAnnuel),sub:'Votre total 2026',icon:'🎯',cls:'c-green'});
+  }
+  document.getElementById('kpi-grid').innerHTML=kpis.map(k=>`
+    <div class="kpi ${k.cls}">
+      <div class="kpi-accent"></div>
+      <div class="kpi-top"><span class="kpi-icon">${k.icon}</span></div>
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+
+  buildChartCA(allBase);
+  buildChartComp(pd);
+  buildChartAgents(allBase);
+  buildChartStatut(allBase);
+  buildLeaderboard(allBase);
+}
+
+function buildChartCA(data){
+  const months=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  const byM=Array(12).fill(0);
+  data.forEach(v=>{
+    const d=new Date(v.h);
+    byM[d.getMonth()]+=v.prime;
+  });
+  dC('cCA');
+  charts.cCA=new Chart(document.getElementById('cCA'),{
+    type:'bar',
+    data:{labels:months,datasets:[
+      {label:'Prime (€)',data:byM,backgroundColor:'rgba(29,106,245,.7)',borderColor:'#1d6af5',borderWidth:1.5,borderRadius:5,borderSkipped:false}
+    ]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{
+      x:{ticks:{color:'#475569'},grid:{color:'rgba(255,255,255,.03)'}},
+      y:{ticks:{color:'#475569',callback:v=>fmtK(v)},grid:{color:'rgba(255,255,255,.04)'}}
+    }}
+  });
+}
+
+function buildChartComp(data){
+  const byCo={};
+  data.forEach(v=>{byCo[v.compagnie]=(byCo[v.compagnie]||0)+v.prime;});
+  const sorted=Object.entries(byCo).sort((a,b)=>b[1]-a[1]);
+  const colors=['#1d6af5','#0ea5e9','#7c3aed','#f0a500','#0dbc74','#f97316'];
+  dC('cComp');
+  charts.cComp=new Chart(document.getElementById('cComp'),{
+    type:'doughnut',
+    data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),backgroundColor:colors,borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#64748b',padding:10,font:{size:11}}}}}
+  });
+}
+
+function buildChartAgents(data){
+  const byAg={};
+  AGENT_NAMES.forEach(a=>byAg[a]=0);
+  data.forEach(v=>{if(v.pseudo in byAg) byAg[v.pseudo]+=v.prime;});
+  const sorted=Object.entries(byAg).sort((a,b)=>b[1]-a[1]);
+  const colors=sorted.map((_,i)=>i===0?'#f0a500':i===1?'#94a3b8':i===2?'#b45309':'rgba(29,106,245,.65)');
+  dC('cAgents');
+  charts.cAgents=new Chart(document.getElementById('cAgents'),{
+    type:'bar',
+    data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),backgroundColor:colors,borderRadius:5}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{
+      x:{ticks:{color:'#64748b'},grid:{display:false}},
+      y:{ticks:{color:'#475569',callback:v=>fmtK(v)},grid:{color:'rgba(255,255,255,.04)'}}
+    }}
+  });
+}
+
+function buildChartStatut(data){
+  const s={Validé:0,'En attente':0,'Annulé':0};
+  data.forEach(v=>{if(s[v.statut]!==undefined) s[v.statut]+=v.prime;});
+  dC('cStatut');
+  charts.cStatut=new Chart(document.getElementById('cStatut'),{
+    type:'pie',
+    data:{labels:Object.keys(s),datasets:[{data:Object.values(s),backgroundColor:['#0dbc74','#f0a500','#f04438'],borderWidth:0}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#64748b',padding:10,font:{size:11}}}}}
+  });
+}
+
+function buildLeaderboard(data){
+  const byAg={};
+  AGENT_NAMES.forEach(a=>byAg[a]={ca:0,nb:0,valides:0,frais:0});
+  data.forEach(v=>{
+    if(!(v.pseudo in byAg)) return;
+    byAg[v.pseudo].ca+=v.prime;
+    byAg[v.pseudo].nb++;
+    byAg[v.pseudo].frais+=(v.frais||0);
+    if(v.statut==='Validé') byAg[v.pseudo].valides++;
+  });
+  const sorted=Object.entries(byAg).sort((a,b)=>b[1].ca-a[1].ca);
+  const maxCA=sorted[0]?.[1].ca||1;
+  const medals=['🥇','🥈','🥉'];
+  const rkCls=['rk1','rk2','rk3'];
+  document.getElementById('lb-list').innerHTML=sorted.map(([name,info],i)=>`
+    <div class="lb-row">
+      <div class="lb-rk ${rkCls[i]||''}">${medals[i]||i+1}</div>
+      <div class="lb-av">${name.slice(0,2).toUpperCase()}</div>
+      <div class="lb-inf">
+        <div class="lb-nm">${name}</div>
+        <div class="lb-st">${info.nb} contrats · ${info.valides} validés · Frais : ${fmt(info.frais)}</div>
+        <div class="lb-br"><div class="lb-fill" style="width:${Math.round(info.ca/maxCA*100)}%"></div></div>
+      </div>
+      <div class="lb-amt">${fmt(info.ca)}</div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════════════════
+//  VENTES PAGE
+// ════════════════════════════════════════════════════════
+function applyVF(){
+  const from=document.getElementById('vf-from').value;
+  const to=document.getElementById('vf-to').value;
+  const agent=document.getElementById('vf-agent').value;
+  const comp=document.getElementById('vf-comp').value;
+  const prod=document.getElementById('vf-prod').value;
+  const stat=document.getElementById('vf-stat').value;
+  const mois=document.getElementById('vf-mois').value;
+  const base=getFilteredByRole(allV);
+  filtV=base.filter(v=>{
+    if(from && v.h.slice(0,10)<from) return false;
+    if(to   && v.h.slice(0,10)>to)   return false;
+    if(agent && v.pseudo!==agent) return false;
+    if(comp  && v.compagnie!==comp) return false;
+    if(prod  && v.produit!==prod) return false;
+    if(stat  && v.statut!==stat) return false;
+    if(mois  && v.mois!==mois) return false;
+    return true;
+  });
+  vPage=1; renderVentes();
+}
+
+function resetVF(){
+  ['vf-from','vf-to'].forEach(id=>document.getElementById(id).value='');
+  ['vf-agent','vf-comp','vf-prod','vf-stat','vf-mois'].forEach(id=>document.getElementById(id).selectedIndex=0);
+  document.getElementById('vsearch').value='';
+  filtV=getFilteredByRole([...allV]);
+  vPage=1; renderVentes();
+}
+
+function vSearch(q){
+  const base=getFilteredByRole(allV);
+  if(!q){filtV=[...base];}
+  else{const lq=q.toLowerCase(); filtV=base.filter(v=>[v.nom,v.pseudo,v.compagnie,v.produit].some(s=>String(s).toLowerCase().includes(lq)));}
+  vPage=1; renderVentes();
+}
+
+let vSrtC='h',vSrtA=false;
+function sortV(col){if(vSrtC===col)vSrtA=!vSrtA;else{vSrtC=col;vSrtA=true;} filtV.sort((a,b)=>{const va=a[col]||'',vb=b[col]||'';if(col==='prime'||col==='frais')return vSrtA?va-vb:vb-va;return vSrtA?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));});renderVentes();}
+
+function renderVentes(){
+  if(filtV.length===0) filtV=getFilteredByRole([...allV]);
+  const tot=filtV.length;
+  const pg=filtV.slice((vPage-1)*VPAGE,vPage*VPAGE);
+  const compBadge={April:'b-april','2MA':'b-2ma','Alptis':'b-alptis','Neoliane':'b-neoliane','Vitalité':'b-vitalite'};
+  const statBadge={Validé:'b-valide','En attente':'b-attente','Annulé':'b-annule'};
+  const prodBadge={Santé:'b-sante','Frais':'b-frais','DC':'b-dc','IJH':'b-ijh'};
+
+  const caF=filtV.reduce((s,v)=>s+v.prime,0);
+  const fraisF=filtV.reduce((s,v)=>s+(v.frais||0),0);
+  const nbV=filtV.filter(v=>v.statut==='Validé').length;
+  const nbA=filtV.filter(v=>v.statut==='Annulé').length;
+  document.getElementById('ventes-kpis').innerHTML=`
+    <div class="kpi c-blue"><div class="kpi-accent"></div><div class="kpi-icon">💰</div><div class="kpi-label">CA Filtré</div><div class="kpi-value">${fmt(caF)}</div><div class="kpi-sub">${tot} contrats</div></div>
+    <div class="kpi c-gold"><div class="kpi-accent"></div><div class="kpi-icon">🧾</div><div class="kpi-label">Frais Filtrés</div><div class="kpi-value">${fmt(fraisF)}</div><div class="kpi-sub">Frais de dossier</div></div>
+    <div class="kpi c-green"><div class="kpi-accent"></div><div class="kpi-icon">✅</div><div class="kpi-label">Validés</div><div class="kpi-value">${nbV}</div><div class="kpi-sub">sur ${tot}</div></div>
+    <div class="kpi c-red" style="--red-bg:rgba(240,68,56,.07);"><div class="kpi-accent" style="background:var(--red)"></div><div class="kpi-icon">❌</div><div class="kpi-label">Annulés</div><div class="kpi-value">${nbA}</div><div class="kpi-sub">CA perdu : ${fmt(filtV.filter(v=>v.statut==='Annulé').reduce((s,v)=>s+v.prime,0))}</div></div>
+  `;
+
+  document.getElementById('vtbody').innerHTML=pg.length?pg.map(v=>`
+    <tr>
+      <td class="td-muted">${fmtDate(v.h)}</td>
+      <td class="td-bold">${v.pseudo}</td>
+      <td>${v.nom}</td>
+      <td><span class="bdg ${compBadge[v.compagnie]||'b-april'}">${v.compagnie}</span></td>
+      <td><span class="bdg ${prodBadge[v.produit]||'b-sante'}">${v.produit}</span></td>
+      <td class="td-mono" style="color:var(--accent2)">${fmt(v.prime)}</td>
+      <td class="td-mono" style="color:var(--gold)">${v.frais?fmt(v.frais):'—'}</td>
+      <td><span class="bdg ${statBadge[v.statut]||'b-attente'}">${v.statut}</span></td>
+      <td class="td-muted">${v.mois}</td>
+      <td class="td-muted">${v.effet||'—'}</td>
+    </tr>`).join(''):
+    '<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text3)">Aucun résultat</td></tr>';
+
+  // totals row
+  if(pg.length){
+    const totalPrime=pg.reduce((s,v)=>s+v.prime,0);
+    const totalFrais=pg.reduce((s,v)=>s+(v.frais||0),0);
+    document.getElementById('vtbody').innerHTML+=`
+      <tr class="tot-row">
+        <td colspan="5" style="text-align:right;color:var(--text2);font-size:.72rem;">TOTAL PAGE</td>
+        <td style="color:var(--accent2)">${fmt(totalPrime)}</td>
+        <td style="color:var(--gold)">${totalFrais?fmt(totalFrais):'—'}</td>
+        <td colspan="3"></td>
+      </tr>`;
+  }
+
+  document.getElementById('vtinfo').textContent=`${tot} vente${tot>1?'s':''} — CA : ${fmt(caF)} — Page ${vPage}/${Math.ceil(tot/VPAGE)||1}`;
+  const pages=Math.ceil(tot/VPAGE);
+  let ph='';
+  for(let i=1;i<=pages&&i<=10;i++) ph+=`<button class="pgbtn ${i===vPage?'active':''}" onclick="goVP(${i})">${i}</button>`;
+  document.getElementById('vpages').innerHTML=ph;
+}
+
+function goVP(p){vPage=p;renderVentes();}
+
+// ════════════════════════════════════════════════════════
+//  AGENTS
+// ════════════════════════════════════════════════════════
+function buildAgents(){
+  const data=allV;
+  const byAg={};
+  AGENT_NAMES.forEach(a=>byAg[a]={ca:0,nb:0,valides:0,annules:0,frais:0,compagnies:{}});
+  data.forEach(v=>{
+    if(!(v.pseudo in byAg)) return;
+    byAg[v.pseudo].ca+=v.prime;
+    byAg[v.pseudo].nb++;
+    byAg[v.pseudo].frais+=(v.frais||0);
+    byAg[v.pseudo].compagnies[v.compagnie]=(byAg[v.pseudo].compagnies[v.compagnie]||0)+1;
+    if(v.statut==='Validé') byAg[v.pseudo].valides++;
+    if(v.statut==='Annulé') byAg[v.pseudo].annules++;
+  });
+  const sorted=Object.entries(byAg).sort((a,b)=>b[1].ca-a[1].ca);
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('ag-grid').innerHTML=sorted.map(([name,info],i)=>{
+    const topComp=Object.entries(info.compagnies).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+    return`<div class="ag-card">
+      <div class="ag-av">${medals[i]||name.slice(0,2).toUpperCase()}</div>
+      <div class="ag-nm">${name}</div>
+      <div class="ag-rl">Agent Commercial · Top: ${topComp}</div>
+      <div class="ag-stats">
+        <div class="ags"><div class="ags-l">CA Total</div><div class="ags-v" style="color:var(--accent2)">${fmt(info.ca)}</div></div>
+        <div class="ags"><div class="ags-l">Contrats</div><div class="ags-v">${info.nb}</div></div>
+        <div class="ags"><div class="ags-l">Validés</div><div class="ags-v" style="color:var(--green)">${info.valides}</div></div>
+        <div class="ags"><div class="ags-l">Annulés</div><div class="ags-v" style="color:var(--red)">${info.annules}</div></div>
+        <div class="ags"><div class="ags-l">Frais</div><div class="ags-v" style="color:var(--gold)">${fmt(info.frais)}</div></div>
+        <div class="ags"><div class="ags-l">Moy/Contrat</div><div class="ags-v">${info.nb?fmtK(info.ca/info.nb):'—'}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════
+//  RÉCAP
+// ════════════════════════════════════════════════════════
+function buildRecap(){
+  const year=parseInt(document.getElementById('r-year').value)||2026;
+  const agF=document.getElementById('r-agent')?.value||'';
+  const base=CU.role==='admin'?allV:allV.filter(v=>v.pseudo===CU.name);
+  const data=base.filter(v=>{
+    if(new Date(v.h).getFullYear()!==year) return false;
+    if(agF && v.pseudo!==agF) return false;
+    return true;
+  });
+  const MONTHS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const MOIS_MAP={Janvier:0,Fevrier:1,Mars:2,Avril:3,Mai:4,Juin:5,Juillet:6,'Août':7,Aout:7,Septembre:8,Octobre:9,Novembre:10,Decembre:11};
+  const byM=Array.from({length:12},()=>({nb:0,prime:0,frais:0,annule:0,attente:0,valide:0}));
+  data.forEach(v=>{
+    const mi=MOIS_MAP[v.mois];
+    if(mi===undefined) return;
+    byM[mi].nb++;
+    byM[mi].prime+=v.prime;
+    byM[mi].frais+=(v.frais||0);
+    if(v.statut==='Annulé') byM[mi].annule+=v.prime;
+    if(v.statut==='En attente') byM[mi].attente++;
+    if(v.statut==='Validé') byM[mi].valide++;
+  });
+
+  const totCA=data.reduce((s,v)=>s+v.prime,0);
+  const totFrais=data.reduce((s,v)=>s+(v.frais||0),0);
+  const totNb=data.length;
+  const totValide=data.filter(v=>v.statut==='Validé').length;
+  const objectifMensuel=15000;
+
+  document.getElementById('recap-kpis').innerHTML=`
+    <div class="kpi c-blue"><div class="kpi-accent"></div><div class="kpi-icon">💰</div><div class="kpi-label">CA Annuel ${year}</div><div class="kpi-value">${fmt(totCA)}</div><div class="kpi-sub">Primes totales</div></div>
+    <div class="kpi c-gold"><div class="kpi-accent"></div><div class="kpi-icon">🧾</div><div class="kpi-label">Frais Annuels</div><div class="kpi-value">${fmt(totFrais)}</div><div class="kpi-sub">Frais de dossier</div></div>
+    <div class="kpi c-green"><div class="kpi-accent"></div><div class="kpi-icon">📋</div><div class="kpi-label">Contrats</div><div class="kpi-value">${totNb}</div><div class="kpi-sub">${totValide} validés</div></div>
+    <div class="kpi c-cyan"><div class="kpi-accent"></div><div class="kpi-icon">📊</div><div class="kpi-label">Moy/Mois</div><div class="kpi-value">${fmt(totCA/3)}</div><div class="kpi-sub">Sur 3 mois actifs</div></div>`;
+
+  // Table
+  document.getElementById('rtbody').innerHTML=byM.map((m,i)=>{
+    if(m.nb===0) return `<tr><td>${MONTHS[i]}</td><td colspan="7" style="color:var(--text3);text-align:center">—</td></tr>`;
+    const net=m.prime-m.annule;
+    const perc=objectifMensuel?Math.round(net/objectifMensuel*100):0;
+    const color=perc>=100?'var(--green)':perc>=70?'var(--accent2)':'var(--red)';
+    return`<tr>
+      <td>${MONTHS[i]}</td>
+      <td>${m.nb}</td>
+      <td>${fmt(m.prime)}</td>
+      <td>${m.frais?fmt(m.frais):'—'}</td>
+      <td style="color:var(--accent2);font-weight:700">${fmt(m.prime+m.frais)}</td>
+      <td style="color:var(--red)">${m.annule?fmt(m.annule):'—'}</td>
+      <td>${m.attente}</td>
+      <td class="prog-cell">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="prog-bar" style="flex:1"><div class="prog-fill" style="width:${Math.min(perc,100)}%;background:${color}"></div></div>
+          <span style="font-size:.7rem;color:${color};min-width:30px">${perc}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Recap charts
+  dC('rChartCA');
+  charts.rChartCA=new Chart(document.getElementById('rChartCA'),{
+    type:'line',
+    data:{labels:['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'],datasets:[
+      {label:'Prime (€)',data:byM.map(m=>m.prime),borderColor:'#1d6af5',backgroundColor:'rgba(29,106,245,.08)',tension:.4,fill:true,pointRadius:4,pointBackgroundColor:'#1d6af5'},
+      {label:'Frais (€)',data:byM.map(m=>m.frais),borderColor:'#f0a500',backgroundColor:'rgba(240,165,0,.05)',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:'#f0a500'}
+    ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#64748b'}}},scales:{x:{ticks:{color:'#475569'},grid:{color:'rgba(255,255,255,.03)'}},y:{ticks:{color:'#475569',callback:v=>fmtK(v)},grid:{color:'rgba(255,255,255,.04)'}}}}
+  });
+
+  const byComp={};
+  data.forEach(v=>{byComp[v.compagnie]=(byComp[v.compagnie]||0)+v.prime;});
+  const sc=Object.entries(byComp).sort((a,b)=>b[1]-a[1]);
+  dC('rChartComp');
+  charts.rChartComp=new Chart(document.getElementById('rChartComp'),{
+    type:'bar',
+    data:{labels:sc.map(x=>x[0]),datasets:[{data:sc.map(x=>x[1]),backgroundColor:['#1d6af5','#7c3aed','#0ea5e9','#f0a500','#0dbc74'],borderRadius:5}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#475569'},grid:{display:false}},y:{ticks:{color:'#475569',callback:v=>fmtK(v)},grid:{color:'rgba(255,255,255,.04)'}}}}
+  });
+}
+
+// ════════════════════════════════════════════════════════
+//  MODAL
+// ════════════════════════════════════════════════════════
+function openModal(){document.getElementById('moverlay').classList.add('open');}
+function closeModal(){document.getElementById('moverlay').classList.remove('open');}
+function saveVente(){
+  const agent=CU.role==='admin'?document.getElementById('m-agent').value:CU.name;
+  const v={
+    id:Date.now(),
+    h:document.getElementById('m-date').value.slice(0,10),
+    pseudo:agent,
+    nom:document.getElementById('m-client').value||'Client',
+    compagnie:document.getElementById('m-comp').value,
+    produit:document.getElementById('m-prod').value,
+    prime:parseFloat(document.getElementById('m-prime').value)||0,
+    frais:parseFloat(document.getElementById('m-frais').value)||0,
+    statut:document.getElementById('m-stat').value,
+    mois:document.getElementById('m-mois').value,
+    effet:document.getElementById('m-effet').value,
+  };
+  if(!v.prime){alert('Veuillez saisir une prime.');return;}
+  allV.unshift(v);
+  filtV=getFilteredByRole([...allV]);
+  closeModal();
+  buildDashboard();
+  renderVentes();
+  buildAgents();
+  document.getElementById('stxt').textContent='Sauvegardé localement';
+  setTimeout(()=>document.getElementById('stxt').textContent='En ligne',2000);
+}
+
+// ════════════════════════════════════════════════════════
+//  NAV
+// ════════════════════════════════════════════════════════
+function showPage(p,btn){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(p==='ventes' && filtV.length===0){filtV=getFilteredByRole([...allV]);renderVentes();}
+  if(p==='recap') buildRecap();
+}
+
+// ════════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════════
+function fmt(n){return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n||0);}
+function fmtK(n){if(n>=1000000)return(n/1e6).toFixed(1)+'M';if(n>=1000)return(n/1000).toFixed(0)+'k';return Math.round(n||0);}
+function fmtDate(s){if(!s)return'—';const d=new Date(s);return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'2-digit'});}
+function dC(id){if(charts[id]){try{charts[id].destroy();}catch(e){} delete charts[id];}}
+
+// close modal on overlay
+document.getElementById('moverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('lp').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+</script>
+</body>
+</html>
